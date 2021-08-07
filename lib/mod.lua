@@ -39,6 +39,7 @@ mod.hook.register("script_pre_init","midimod",function()
 
   local param_names_dev={"mmfromch"}
   local param_names={"mmenabled","mmto","mmtoch"}
+  local param_names_crow={"mmenabledcrow","mmtocrow","crowa","crowd","crows"}
   local reload_parameters=function(v,ch)
     for i=1,#devices do
       for _,param_name in ipairs(param_names_dev) do
@@ -63,7 +64,7 @@ mod.hook.register("script_pre_init","midimod",function()
     end
     _menu.rebuild_params()
   end
-  params:add_group("MIDIPLEX",1+(#devices*(3*8+1)))
+  params:add_group("MIDIPLEX",1+(#devices*(8*8+1)))
   params:add{type="option",id="mmfrom",name="from device",options=devices,default=1,action=function(v)
     reload_parameters(v,params:get(v.."mmfromch"))
   end}
@@ -81,9 +82,18 @@ mod.hook.register("script_pre_init","midimod",function()
       reload_parameters(i,v)
     end}
     for ch=1,8 do
+      params:add{type="option",id=i..ch.."mmenabled",name="midi thru",options={"disabled","enabled"},default=1,action=function(v)
+        reload_parameters(i,params:get(i.."mmfromch"))
+      end}
       params:add{type="option",id=i..ch.."mmto",name="to device",options=other_devices_name,default=1}
       params:add{type="option",id=i..ch.."mmtoch",name="to channel",options={1,2,3,4,5,6,7,8},default=1}
-      params:add{type="option",id=i..ch.."mmenabled",name="enabled",options={"false","true"},default=1}
+      params:add{type="option",id=i..ch.."mmenabledcrow",name="crow thru",options={"disabled","enabled"},default=1,action=function(v)
+        reload_parameters(i,params:get(i.."mmfromch"))
+      end}
+      params:add{type="option",id=i..ch.."mmtocrow",name="to crow",options={1,3},default=1}
+      params:add_control(i..ch.."crowa","attack",controlspec.new(0,10,"lin",0.01,0.1,"s",0.01/10))
+      params:add_control(i..ch.."crows","sustain",controlspec.new(0,10,"lin",0.1,10,"v",0.1/10))
+      params:add_control(i..ch.."crowd","decay",controlspec.new(0,10,"lin",0.01,0.5,"s",0.01/10))
     end
   end
   reload_parameters(1,1)
