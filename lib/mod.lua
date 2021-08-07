@@ -1,6 +1,6 @@
 local mod=require 'core/mods'
 
-mod.hook.register("script_pre_init","midimod",function()
+mod.hook.register("script_pre_init","midiplex",function()
   print("running midiplex")
   -- process incoming midi
   if #midi.devices<2 then
@@ -25,6 +25,12 @@ mod.hook.register("script_pre_init","midimod",function()
           local todevice=devices_other[i][params:get(i..d.ch.."mmto")]
           print("midi mod: "..d.type.." "..dev.name.." ch"..d.ch.."->"..devices[todevice].." ch"..toch)
           ms[todevice]:note_on(d.note,d.vel,toch)
+        end
+        if params:get(i..d.ch.."mmenabledcrow")==2 then
+          local crowid=params:get(i..d.ch.."mmtocrow")*2-1
+          crow.output[crowid].volts=(d.note-21)/12
+          crow.output[crowid+1].action=string.format("{ to(%2.2f,%2.2f,exponential),to(0,%2.2f,exponential) }",params:get(i..d.ch.."crows"),params:get(i..d.ch.."crowa"),params:get(i..d.ch.."crowd"));
+          crow.output[crowid+1]()
         end
       elseif d.type=="note_off" then
         if params:get(i..d.ch.."mmenabled")==2 then
@@ -54,6 +60,18 @@ mod.hook.register("script_pre_init","midimod",function()
           if i==v and ch==ch2 then
             params:show(i..ch..param_name)
             if pi>1 and params:get(i..ch..param_names[1])==1 then
+              params:hide(i..ch..param_name)
+            end
+          else
+            params:hide(i..ch2..param_name)
+          end
+        end
+      end
+      for pi,param_name in ipairs(param_names_crow) do
+        for ch2=1,8 do
+          if i==v and ch==ch2 then
+            params:show(i..ch..param_name)
+            if pi>1 and params:get(i..ch..param_names_crow[1])==1 then
               params:hide(i..ch..param_name)
             end
           else
@@ -97,4 +115,4 @@ mod.hook.register("script_pre_init","midimod",function()
     end
   end
   reload_parameters(1,1)
-end
+end)
